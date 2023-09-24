@@ -10,21 +10,20 @@ import 'package:desi_karaoke_lite/widgets/fading_background.dart';
 import 'package:desi_karaoke_lite/widgets/spinning_logo.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_audio_engine/flutter_audio_engine.dart';
 import 'package:flutter_device_type/flutter_device_type.dart';
-import 'package:screen/screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:utf/utf.dart';
+import 'package:flu_wake_lock/flu_wake_lock.dart';
+
 
 class KaraokePage extends StatefulWidget {
   final Music music;
 
-  KaraokePage({Key key, @required this.music}) : super(key: key);
+  KaraokePage({required Key key, required this.music}) : super(key: key);
 
   @override
   _KaraokePageState createState() => _KaraokePageState();
@@ -41,13 +40,13 @@ class _KaraokePageState extends State<KaraokePage>
 
   // Page fields
   AudioEngine audioEngine = AudioEngine();
-  Karaoke _karaoke;
-  List<KaraokeDevice> deviceList = List();
+  late Karaoke _karaoke;
+  List<KaraokeDevice> deviceList = [];
 
   // Disposables
-  StreamSubscription subBluetooth;
-  StreamSubscription plyerStatusSubscription;
-  StreamSubscription playerPositionSubscription;
+  late StreamSubscription subBluetooth;
+  late StreamSubscription plyerStatusSubscription;
+  late StreamSubscription playerPositionSubscription;
 
   // Page state fields
   PlayerStatus _playerStatus = PlayerStatus.NOT_INITIALIZED;
@@ -55,6 +54,7 @@ class _KaraokePageState extends State<KaraokePage>
   RichText _lastLyric = RichText(
     text: TextSpan(text: "\n\n"),
   );
+  FluWakeLock _fluWakeLock = FluWakeLock();
 
   // Page state relate fields
 
@@ -62,19 +62,19 @@ class _KaraokePageState extends State<KaraokePage>
   int _playerSpeedStep = 0;
   int _playerHalfstepDelta = 0;
   int _countdownPosition = 0;
-  PlayerStatus statusBeforeBackground;
-  bool isFlushbarShown = false;
+  late PlayerStatus statusBeforeBackground;
+  /*bool isFlushbarShown = false;*/
 
   // Data fields
-  String uid;
-  int _lyricPosition;
-  bool isMusicTrialExpired;
-  bool isTrialAccount;
-  bool isValidDeviceConnected;
+  late String uid;
+  late int _lyricPosition;
+  late bool isMusicTrialExpired;
+  late bool isTrialAccount;
+  late bool isValidDeviceConnected;
   bool isFreeModeEnabled = false;
   int trialMillis = 1000 * 1000;
 
-  var flushbar = Flushbar(
+  /*var flushbar = Flushbar(
     title: "Microphone required",
     message:
         "Please, connect to a RANGS Desi Karaoke microphone to enjoy the full song",
@@ -86,7 +86,7 @@ class _KaraokePageState extends State<KaraokePage>
         onPressed: () => launch("tel://+8801748332274")),
     duration: Duration(days: 365),
     isDismissible: false,
-  );
+  );*/
 
   Future<File> downloadFile(Reference ref) async {
     final String url = await ref.getDownloadURL();
@@ -112,7 +112,7 @@ class _KaraokePageState extends State<KaraokePage>
   @override
   void initState() {
     super.initState();
-    Screen.keepOn(true);
+    _fluWakeLock.enable();
     WidgetsBinding.instance.addObserver(this);
     Reference storageReference =
         FirebaseStorage.instance.ref().child(widget.music.storagepath);
@@ -185,10 +185,10 @@ class _KaraokePageState extends State<KaraokePage>
       });
     });
     var user = FirebaseAuth.instance.currentUser;
-    uid = user.uid;
+    uid = user!.uid;
     FirebaseDatabase.instance
         .reference()
-        .child("users/${user.uid}/currenttime")
+        .child("users/${user?.uid}/currenttime")
         .set(ServerValue.timestamp)
         .whenComplete(() {
       FirebaseDatabase.instance
@@ -528,7 +528,7 @@ class _KaraokePageState extends State<KaraokePage>
     playerPositionSubscription.cancel();
     subBluetooth?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    Screen.keepOn(false);
+    _fluWakeLock.disable();
     super.dispose();
   }
 
@@ -676,7 +676,7 @@ class _KaraokePageState extends State<KaraokePage>
           !isMusicTrialExpired ||
           isFreeModeEnabled;
 
-      switch (shouldPlayLoud) {
+      /*switch (shouldPlayLoud) {
         case false:
           if (!isFlushbarShown) {
             isFlushbarShown = true;
@@ -688,7 +688,7 @@ class _KaraokePageState extends State<KaraokePage>
             isFlushbarShown = false;
             flushbar.dismiss();
           }
-      }
+      }*/
       audioEngine.setVolume(shouldPlayLoud ? 1.0 : 0.0);
     }
   }

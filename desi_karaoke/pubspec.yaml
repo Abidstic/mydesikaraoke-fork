@@ -22,28 +22,27 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  firebase_core: ^2.16.0 #version changed
-  firebase_database: ^10.2.6 #version changed
-  firebase_storage: ^11.2.7 #version changed
-  cloud_firestore: ^4.9.2 #version changed
-  firebase_auth: ^4.10.0 #version changed
-  google_sign_in: ^6.1.5 #version changed
-  flutter_auth_buttons: ^0.10.0 #Change package to auth_buttons
-  flutter_signin_button: ^2.0.0 #version changed
-  firebase_auth_ui: ^1.0.1 #change package to firebase_ui_auth
-  utf:
+  firebase_core: ^2.16.0
+  firebase_database: ^10.2.6
+  firebase_storage: ^11.2.7
+  cloud_firestore: ^4.9.2
+  firebase_auth: ^4.10.0
+  google_sign_in: ^6.1.5
+  auth_buttons: ^3.0.2
+  flutter_signin_button: ^2.0.0
+  firebase_ui_auth: ^1.8.0
   flutter_audio_engine:
     path: ../flutter_audio_engine/
-  connectivity: ^3.0.3 #discontinued
-  flushbar: ^1.9.1 #change package to another_flushbar
-  url_launcher: ^6.1.14 #version changed
-  cupertino_icons: ^1.0.6 #version changed
-  shared_preferences: ^2.2.1 #version changed
-  flutter_device_type: ^0.4.0 #version changed
-  #screen: ^0.0.5 # no null safety
-  upgrader: ^8.1.0 #version changed
-  badges: ^3.1.2 #version changed
-  intl: ^0.18.1 #version changed
+  connectivity: ^3.0.3
+  another_flushbar: ^1.12.30
+  url_launcher: ^6.1.14
+  cupertino_icons: ^1.0.6
+  shared_preferences: ^2.2.1
+  flutter_device_type: ^0.4.0
+  flu_wake_lock: ^0.0.2
+  upgrader: ^8.1.0
+  badges: ^3.1.2
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
