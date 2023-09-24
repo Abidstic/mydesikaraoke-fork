@@ -15,41 +15,41 @@ version: 6.5.0+113
 publish_to: none
 
 environment:
-  sdk: ">=2.2.0 <3.0.0"
+  sdk: '>=3.1.2 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  firebase_core: ^1.0.3
-  firebase_database: ^6.1.2
-  firebase_storage: ^8.0.3
-  cloud_firestore: ^1.0.5
-  firebase_auth: ^1.1.0
-  google_sign_in: ^5.0.2
-  flutter_auth_buttons: ^0.10.0
-  flutter_signin_button: ^2.0.0
-  firebase_auth_ui: ^1.0.1
+  firebase_core: ^2.16.0 #version changed
+  firebase_database: ^10.2.6 #version changed
+  firebase_storage: ^11.2.7 #version changed
+  cloud_firestore: ^4.9.2 #version changed
+  firebase_auth: ^4.10.0 #version changed
+  google_sign_in: ^6.1.5 #version changed
+  flutter_auth_buttons: ^0.10.0 #Change package to auth_buttons
+  flutter_signin_button: ^2.0.0 #version changed
+  firebase_auth_ui: ^1.0.1 #change package to firebase_ui_auth
   utf:
   flutter_audio_engine:
     path: ../flutter_audio_engine/
   connectivity: ^3.0.3 #discontinued
-  flushbar: ^1.9.1
-  url_launcher: ^6.0.2
-  cupertino_icons:
-  shared_preferences:
-  flutter_device_type: ^0.4.0
-  screen: ^0.0.5
-  upgrader: ^3.2.0
-  badges: ^1.1.1
-  intl: ^0.17.0
+  flushbar: ^1.9.1 #change package to another_flushbar
+  url_launcher: ^6.1.14 #version changed
+  cupertino_icons: ^1.0.6 #version changed
+  shared_preferences: ^2.2.1 #version changed
+  flutter_device_type: ^0.4.0 #version changed
+  #screen: ^0.0.5 # no null safety
+  upgrader: ^8.1.0 #version changed
+  badges: ^3.1.2 #version changed
+  intl: ^0.18.1 #version changed
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_launcher_icons: ^0.9.0
+  flutter_launcher_icons: ^0.13.1
 flutter_icons: # flutter pub run flutter_launcher_icons:main
   image_path: "assets/launcher_icon/DesiKaraokeLogoBoth.png"
   android: true
