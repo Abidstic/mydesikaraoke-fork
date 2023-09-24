@@ -7,9 +7,10 @@ import 'package:flutter_signin_button/button_builder.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 
 class LoginScreen extends StatelessWidget {
-  static const MethodChannel _channel = const MethodChannel('firebase_auth_ui');
+  static const MethodChannel _channel = const MethodChannel('firebase_ui_auth');
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -23,7 +24,7 @@ class LoginScreen extends StatelessWidget {
 
 class LoginPage extends StatefulWidget {
   const LoginPage({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -35,8 +36,8 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   var nameEditingController = TextEditingController();
-  var globalKey = GlobalKey();
-  DatabaseReference userRef;
+   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late DatabaseReference userRef;
 
   @override
   Widget build(BuildContext context) {
@@ -100,10 +101,11 @@ class _LoginPageState extends State<LoginPage> {
 
     // final User user = (await _auth.signInWithCredential(credential)).user;
     // print(user.uid);
-    userRef = FirebaseDatabase.instance.reference().child("users/${user.uid}");
+    userRef = FirebaseDatabase.instance.ref().child("users/${user.uid}");
 
     userRef?.once()?.then((data) {
-      if (data.value == null) {
+      DataSnapshot snapshot = data.snapshot;
+      if (snapshot.value == null) {
         showDialog(
           barrierDismissible: false,
           context: context,
@@ -111,14 +113,14 @@ class _LoginPageState extends State<LoginPage> {
             return AlertDialog(
               title: Text("Your Full Name:"),
               content: Form(
-                key: globalKey,
+                key: _formKey,
                 child: TextFormField(
                   textCapitalization: TextCapitalization.words,
                   maxLines: 1,
                   controller: nameEditingController,
                   validator: (val) {
                     print("validating: $val");
-                    if (val.length < 2) {
+                    if (val!.length < 2) {
                       return "Name too short";
                     } else
                       return null;
@@ -128,14 +130,14 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text("Cancel"),
                   onPressed: () {
                     Navigator.pop(context);
                     _auth.signOut();
                   },
                 ),
-                FlatButton(
+                TextButton(
                   child: Text("Confirm"),
                   onPressed: submitName,
                 ),
@@ -162,8 +164,9 @@ class _LoginPageState extends State<LoginPage> {
 
   void submitName() {
     print("submit is pressed");
-    FormState state = globalKey.currentState;
-    if (state.validate()) {
+    
+    
+    if (_formKey.currentState!.validate()) {
       var signUpData = Map<String, dynamic>();
       signUpData['name'] = nameEditingController.text;
       signUpData['signuptime'] = ServerValue.timestamp;
