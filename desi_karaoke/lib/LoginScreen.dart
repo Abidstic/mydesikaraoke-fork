@@ -1,11 +1,8 @@
 import 'package:desi_karaoke_lite/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth_ui/firebase_auth_ui.dart';
-import 'package:firebase_auth_ui/providers.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
 import 'package:flutter_signin_button/button_builder.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
@@ -182,7 +179,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   launchNativeSignInUi() {
-    FirebaseAuthUi.instance().launchAuth([
+
+    /*FirebaseAuthUi.instance().launchAuth([
           // AuthProvider.email(),
           // Google ,facebook, twitter and phone auth providers are commented because this example
           // isn't configured to enable them. Please follow the README and uncomment
@@ -205,6 +203,6 @@ class _LoginPageState extends State<LoginPage> {
               }
             });
           }
-        });
+        });*/
   }
 }

@@ -10,6 +10,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
@@ -17,7 +18,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private var bluetoothAdapter: BluetoothAdapter? = null
     var spacesFileRepository: SpacesFileRepository? = null
 
-    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+    /*override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setStreamHandler(this)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL).setMethodCallHandler { call, result ->
@@ -27,6 +28,19 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
                 else             -> "hi"
             }
 
+        }
+    }*/
+
+    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+        GeneratedPluginRegistrant.registerWith(flutterEngine)
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setStreamHandler(this)
+        val methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        methodChannel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getDownloadUrl" -> getDownloadURL(call.argument("path"), result)
+                "getFileFromDo"  -> getFile(call.argument("path"), result)
+                else             -> "hi"
+            }
         }
     }
 
