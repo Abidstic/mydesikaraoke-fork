@@ -8,6 +8,7 @@ import 'package:desi_karaoke_lite/lyricBuilder.dart';
 import 'package:desi_karaoke_lite/models.dart';
 import 'package:desi_karaoke_lite/widgets/fading_background.dart';
 import 'package:desi_karaoke_lite/widgets/spinning_logo.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -30,6 +31,8 @@ class KaraokePage extends StatefulWidget {
 
   @override
   _KaraokePageState createState() => _KaraokePageState();
+
+
 }
 
 class _KaraokePageState extends State<KaraokePage>
@@ -65,7 +68,7 @@ class _KaraokePageState extends State<KaraokePage>
   int _playerSpeedStep = 0;
   int _playerHalfstepDelta = 0;
   int _countdownPosition = 0;
-  late PlayerStatus statusBeforeBackground;
+  late PlayerStatus? statusBeforeBackground;
   /*bool isFlushbarShown = false;*/
 
   // Data fields
@@ -76,6 +79,8 @@ class _KaraokePageState extends State<KaraokePage>
   late bool isValidDeviceConnected;
   bool isFreeModeEnabled = false;
   int trialMillis = 1000 * 1000;
+
+
 
   /*var flushbar = Flushbar(
     title: "Microphone required",
@@ -90,6 +95,12 @@ class _KaraokePageState extends State<KaraokePage>
     duration: Duration(days: 365),
     isDismissible: false,
   );*/
+
+  Future<void> main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+  }
+
 
   Future<File> downloadFile(Reference ref) async {
     final String url = await ref.getDownloadURL();
@@ -179,29 +190,48 @@ class _KaraokePageState extends State<KaraokePage>
       }
     });
     FirebaseDatabase.instance
-        .reference()
+        .ref()
+        .child("isFreeModeEnabled")
+        .once()
+        .then((value) {
+      setPlaybackValidity(() {
+        dynamic snapshotValue = value.snapshot.value;
+        if (snapshotValue is bool) {
+          isFreeModeEnabled = snapshotValue;
+        } else {
+          // Handle the case where the data doesn't exist or is not a boolean.
+        }
+      });
+    });
+
+    /*FirebaseDatabase.instance
+        .ref()
         .child("isFreeModeEnabled")
         .once()
         .then((value) {
       setPlaybackValidity(() {
         isFreeModeEnabled = value.value;
       });
-    });
+    });*/
     var user = FirebaseAuth.instance.currentUser;
     uid = user!.uid;
+
+
     FirebaseDatabase.instance
-        .reference()
-        .child("users/${user?.uid}/currenttime")
+        .ref()
+        .child("users/${user.uid}/currenttime")
         .set(ServerValue.timestamp)
         .whenComplete(() {
       FirebaseDatabase.instance
-          .reference()
+          .ref()
           .child("users/${user.uid}")
           .once()
           .then((data) {
-        int currentTime = data.value['currenttime'];
-        int signUpTime = data.value['signuptime'];
-        if ((currentTime - signUpTime) < 72 * 3600 * 1000) {
+        int? currentTime = (data.snapshot.value as Map<String, dynamic>?)?['currenttime'];
+        int? signUpTime = (data.snapshot.value as Map<String, dynamic>?)?['signuptime'];
+        /*int currentTime = data.value['currenttime'];
+        int signUpTime = data.value['signuptime'];*/
+        if ((currentTime! - signUpTime!) < 72 * 3600 * 1000) {
           setPlaybackValidity(() {
             isTrialAccount = true;
           });
@@ -261,8 +291,8 @@ class _KaraokePageState extends State<KaraokePage>
                                   widget.music.effectivetitle,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .headline5
-                                      .apply(
+                                      .headlineSmall
+                                      ?.apply(
                                           color: Colors.white,
                                           fontSizeDelta:
                                               Device.get().isTablet ? 10 : 0),
@@ -278,7 +308,7 @@ class _KaraokePageState extends State<KaraokePage>
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(
                           widget.music.effectiveartist,
-                          style: Theme.of(context).textTheme.subtitle1.apply(
+                          style: Theme.of(context).textTheme.titleMedium?.apply(
                               color: Colors.white,
                               fontSizeDelta: Device.get().isTablet ? 8 : 0),
                           textAlign: TextAlign.center,
@@ -312,7 +342,7 @@ class _KaraokePageState extends State<KaraokePage>
                             child: Text(
                               countDownText,
                               style:
-                                  Theme.of(context).textTheme.headline3.apply(
+                                  Theme.of(context).textTheme.displaySmall?.apply(
                                         color: Colors.red,
                                       ),
                             ),
@@ -352,7 +382,6 @@ class _KaraokePageState extends State<KaraokePage>
                       ],
                     ),
                     duration: Duration(milliseconds: 1200),
-                    vsync: this,
                   ),
                 ),
                 Spacer(flex: 2),
@@ -512,7 +541,7 @@ class _KaraokePageState extends State<KaraokePage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       if (statusBeforeBackground == PlayerStatus.RESUMED) {
-        audioEngine?.startPlaying();
+        audioEngine.startPlaying();
       }
       statusBeforeBackground = null;
     } else if (state == AppLifecycleState.inactive ||
@@ -520,16 +549,16 @@ class _KaraokePageState extends State<KaraokePage>
       if (statusBeforeBackground == null) {
         statusBeforeBackground = _playerStatus;
       }
-      audioEngine?.pause();
+      audioEngine.pause();
     }
   }
 
   @override
   void dispose() {
-    plyerStatusSubscription?.cancel();
+    plyerStatusSubscription.cancel();
     audioEngine.stop();
     playerPositionSubscription.cancel();
-    subBluetooth?.cancel();
+    subBluetooth.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _fluWakeLock.disable();
     super.dispose();
@@ -552,7 +581,28 @@ class _KaraokePageState extends State<KaraokePage>
     } else
       lyric = decodeUtf8(bytes);
     _karaoke = await buildLyric(lyric);
-    FirebaseDatabase.instance.reference().child("devices").once().then((data) {
+    final databaseReference = FirebaseDatabase.instance.reference().child("devices");
+
+    databaseReference.once().then((DataSnapshot snapshot) {
+      Map<dynamic, dynamic>? values = snapshot.value as Map?;
+      values?.forEach((key, value) {
+        KaraokeDevice device = KaraokeDevice.fromMap(value);
+        deviceList.add(device);
+      });
+    } as FutureOr Function(DatabaseEvent value)).whenComplete(() {
+      subBluetooth = platform.receiveBroadcastStream().listen((mac) {
+        var deviceMatches = false;
+        deviceList.forEach((device) {
+          if (device.mac == mac.toString()) {
+            deviceMatches = true;
+          }
+        });
+        setPlaybackValidity(() {
+          isValidDeviceConnected = deviceMatches;
+        });
+      });
+    });
+    /*FirebaseDatabase.instance.ref().child("devices").once().then((data) {
       data.value.forEach(
         (key, value) {
           KaraokeDevice device = KaraokeDevice.fromMap(value);
@@ -572,13 +622,13 @@ class _KaraokePageState extends State<KaraokePage>
           // isValidDeviceConnected = true;
         });
       });
-    });
+    });*/
   }
 
   String convertToLyricTemp(KaraokeTimedText karaokeTimedText) {
     StringBuffer stringBuffer = StringBuffer();
-    karaokeTimedText?.lines?.forEach((KaraokeLine it) {
-      it?.words?.forEach((word) {
+    karaokeTimedText.lines.forEach((KaraokeLine it) {
+      it.words.forEach((word) {
         stringBuffer.write("$word ");
       });
       stringBuffer.write("\n");
@@ -591,23 +641,21 @@ class _KaraokePageState extends State<KaraokePage>
       ["", ""],
       ["", ""]
     ];
-    int hightlightwordNumber =
-        karaokeTimedText?.lyricHighlightEvent?.wordnumber;
+    int? hightlightwordNumber =
+        karaokeTimedText.lyricHighlightEvent.wordnumber;
 
     int highlightLine = 5;
-    if (karaokeTimedText != null) {
-      if (karaokeTimedText?.lyricHighlightEvent?.line ==
-          karaokeTimedText?.lines[0]) {
-        highlightLine = 0;
-      } else if (karaokeTimedText?.lyricHighlightEvent?.line ==
-          karaokeTimedText?.lines[1]) {
-        highlightLine = 1;
-      }
+    if (karaokeTimedText.lyricHighlightEvent.line ==
+        karaokeTimedText.lines[0]) {
+      highlightLine = 0;
+    } else if (karaokeTimedText.lyricHighlightEvent.line ==
+        karaokeTimedText.lines[1]) {
+      highlightLine = 1;
     }
-    karaokeTimedText?.lines?.asMap()?.forEach((lineNum, line) {
+      karaokeTimedText.lines.asMap().forEach((lineNum, line) {
       StringBuffer normalBuffer = StringBuffer();
       StringBuffer highlightBuffer = StringBuffer();
-      line?.words?.asMap()?.forEach((wordNum, word) {
+      line.words.asMap().forEach((wordNum, word) {
         if (highlightLine == lineNum && wordNum <= hightlightwordNumber) {
           highlightBuffer.write("$word ");
         } else {
@@ -620,7 +668,7 @@ class _KaraokePageState extends State<KaraokePage>
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style: Theme.of(context).textTheme.headline5.apply(
+        style: Theme.of(context).textTheme.headlineSmall?.apply(
             color: Colors.blue[700],
             fontWeightDelta: 3,
             fontSizeDelta: Device.get().isTablet ? 25 : 0),
@@ -670,31 +718,26 @@ class _KaraokePageState extends State<KaraokePage>
 
   void setPlaybackValidity(VoidCallback fn) {
     fn();
-    if (isTrialAccount != null &&
-        isValidDeviceConnected != null &&
-        isMusicTrialExpired != null &&
-        isFreeModeEnabled != null) {
-      var shouldPlayLoud = isTrialAccount ||
-          isValidDeviceConnected ||
-          !isMusicTrialExpired ||
-          isFreeModeEnabled;
+    var shouldPlayLoud = isTrialAccount ||
+        isValidDeviceConnected ||
+        !isMusicTrialExpired ||
+        isFreeModeEnabled;
 
-      /*switch (shouldPlayLoud) {
-        case false:
-          if (!isFlushbarShown) {
-            isFlushbarShown = true;
-            flushbar.show(context);
-          }
-          break;
-        default:
-          if (isFlushbarShown) {
-            isFlushbarShown = false;
-            flushbar.dismiss();
-          }
-      }*/
-      audioEngine.setVolume(shouldPlayLoud ? 1.0 : 0.0);
+    /*switch (shouldPlayLoud) {
+      case false:
+        if (!isFlushbarShown) {
+          isFlushbarShown = true;
+          flushbar.show(context);
+        }
+        break;
+      default:
+        if (isFlushbarShown) {
+          isFlushbarShown = false;
+          flushbar.dismiss();
+        }
+    }*/
+    audioEngine.setVolume(shouldPlayLoud ? 1.0 : 0.0);
     }
-  }
 }
 
 class DiscreteValueChanger extends StatefulWidget {
@@ -707,13 +750,13 @@ class DiscreteValueChanger extends StatefulWidget {
   final bool disabled;
 
   DiscreteValueChanger(
-      {Key key,
-      @required this.valueOnChange,
-      @required this.currentValue,
-      @required this.title,
-      @required this.minValue,
-      @required this.maxValue,
-      bool disabled})
+      { Key? key,
+      required this.valueOnChange,
+      required this.currentValue,
+      required this.title,
+      required this.minValue,
+      required this.maxValue,
+       bool? disabled})
       : this.divisions = maxValue - minValue,
         this.disabled = disabled ?? false,
         super(key: key);
@@ -723,7 +766,7 @@ class DiscreteValueChanger extends StatefulWidget {
 }
 
 class _DiscreetValueChangerState extends State<DiscreteValueChanger> {
-  double _newValue;
+  late double _newValue;
 
   get newValue => _newValue;
 
@@ -752,7 +795,7 @@ class _DiscreetValueChangerState extends State<DiscreteValueChanger> {
         children: <Widget>[
           Center(
               child: Text(widget.title,
-                  style: Theme.of(context).textTheme.headline6)),
+                  style: Theme.of(context).textTheme.titleLarge)),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[

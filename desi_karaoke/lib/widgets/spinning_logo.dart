@@ -5,8 +5,8 @@ import 'package:flutter_audio_engine/flutter_audio_engine.dart';
 
 class SpinningLogo extends StatefulWidget {
   SpinningLogo({
-    Key key,
-    this.playerStatus,
+     Key? key,
+    required this.playerStatus,
   }) : super(key: key);
 
   final PlayerStatus playerStatus;
@@ -16,8 +16,8 @@ class SpinningLogo extends StatefulWidget {
 
 class _SpinningLogoState extends State<SpinningLogo>
     with SingleTickerProviderStateMixin {
-  Animation<double> logoAnimation;
-  AnimationController logoController;
+  late Animation<double> logoAnimation;
+  late AnimationController logoController;
   @override
   void initState() {
     super.initState();

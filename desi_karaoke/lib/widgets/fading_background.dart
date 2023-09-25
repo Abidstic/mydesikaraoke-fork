@@ -10,7 +10,7 @@ class FadingBackground extends StatefulWidget {
 
 class _FadingBackgroundState extends State<FadingBackground>
     with SingleTickerProviderStateMixin {
-  Timer _timer;
+  late Timer _timer;
   static Random _random = Random();
   String wallNext = getRandomWallpaper();
   int wallCycleState = 4;
@@ -18,8 +18,8 @@ class _FadingBackgroundState extends State<FadingBackground>
     return "assets/backgrounds/wall_${(1 + _random.nextInt(26)).toString().padLeft(4, '0')}.webp";
   }
 
-  AnimationController controller;
-  Animation<double> animation;
+  late AnimationController controller;
+  late Animation<double> animation;
 
   String _l1background = getRandomWallpaper();
   String _l2background = getRandomWallpaper();
