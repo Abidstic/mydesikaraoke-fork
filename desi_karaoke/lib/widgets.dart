@@ -3,11 +3,12 @@ import 'package:desi_karaoke_lite/models.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:badges/badges.dart' as badges;
 
 class MusicTile extends StatefulWidget {
-  final Music music;
-  final Function onTap;
-  final SharedPreferences prefs;
+  final Music? music;
+  final Function? onTap;
+  final SharedPreferences? prefs;
 
   MusicTile({@required this.music, this.onTap, @required this.prefs});
 
@@ -22,44 +23,45 @@ class _MusicTileState extends State<MusicTile> {
       children: <Widget>[
         Hero(
           child: ListTile(
-            onTap: () => widget.onTap(widget.music),
+            onTap: () => widget.onTap!(widget.music),
             leading: CircleAvatar(
               child: Icon(Icons.music_note),
             ),
-            title: Text(widget.music.effectivetitle),
-            subtitle: Text(widget.music.effectiveartist),
-            trailing: widget.music.isFavorite
+            title: Text(widget.music!.effectivetitle),
+            subtitle: Text(widget.music!.effectiveartist),
+            trailing: widget.music!.isFavorite
                 ? IconButton(
                     icon: Icon(
                       CupertinoIcons.heart_solid,
                       color: Colors.redAccent,
                     ),
                     onPressed: () {
-                      widget.music.isFavorite = false;
+                      widget.music?.isFavorite = false;
                       var list = widget.prefs
-                              .getStringList(SharedPreferencesKeys.FAVORITES) ??
-                          List<String>();
-                      list.remove(widget.music.key);
+                              ?.getStringList(SharedPreferencesKeys.FAVORITES) ??
+                          List<String>.empty();
+                      list.remove(widget.music?.key);
                       widget.prefs
-                          .setStringList(SharedPreferencesKeys.FAVORITES, list);
+                          ?.setStringList(SharedPreferencesKeys.FAVORITES, list);
                       setState(() {});
                     },
                   )
                 : IconButton(
                     icon: Icon(CupertinoIcons.heart),
                     onPressed: () {
-                      widget.music.isFavorite = true;
+                      widget.music?.isFavorite = true;
                       var list = widget.prefs
-                              .getStringList(SharedPreferencesKeys.FAVORITES) ??
-                          List<String>();
-                      list.add(widget.music.key);
+                              ?.getStringList(SharedPreferencesKeys.FAVORITES) ??
+                          List<String>.empty();
+                      list.add(widget.music!.key);
                       widget.prefs
-                          .setStringList(SharedPreferencesKeys.FAVORITES, list);
+                          ?.setStringList(SharedPreferencesKeys.FAVORITES, list);
                       setState(() {});
                     },
                   ),
           ),
-          tag: widget.music,
+          tag: widget.music?.key ?? UniqueKey()
+          /*tag: widget.music*/,
         ),
         Divider(height: 2),
       ],
@@ -68,10 +70,10 @@ class _MusicTileState extends State<MusicTile> {
 }
 
 class ItemTile extends StatelessWidget {
-  final String title;
-  final Function onTap;
-  final IconData icon;
-  final int count;
+  final String? title;
+  final Function? onTap;
+  final IconData? icon;
+  final int? count;
 
   const ItemTile({this.title, this.onTap, this.icon, this.count});
 
@@ -80,15 +82,24 @@ class ItemTile extends StatelessWidget {
     return Column(
       children: <Widget>[
         ListTile(
-          onTap: () => onTap(title),
-          title: Text(title),
+          onTap: () => onTap!(title),
+          title: Text(title!),
           leading: CircleAvatar(child: Icon(icon)),
-          trailing: Badge(
+          trailing:
+          badges.Badge(
+            badgeStyle: badges.BadgeStyle(
+              badgeColor: Colors.blueAccent,
+              shape: badges.BadgeShape.square,
+            ),
+            badgeContent: Text('$count', style: TextStyle(color: Colors.white)),
+          )
+
+          /*Badge(
             badgeColor: Colors.blueAccent,
             shape: BadgeShape.square,
             // borderRadius: 20,
             badgeContent: Text('$count', style: TextStyle(color: Colors.white)),
-          ),
+          )*/,
         ),
         Divider(height: 2)
       ],
