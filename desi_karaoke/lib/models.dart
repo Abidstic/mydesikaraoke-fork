@@ -1,18 +1,18 @@
 class Music {
-  String artist;
-  String banglaartist = "";
-  String banglatitle = "";
-  String effectivetitle;
-  String effectiveartist;
-  String genre;
-  String language;
-  int lyricoffset;
-  String lyricref;
-  String storagepath;
-  String title;
-  String trial;
-  String key;
-  bool isFavorite = false;
+  String ?artist;
+  String ?banglaartist = "";
+  String ?banglatitle = "";
+  String ?effectivetitle;
+  String ?effectiveartist;
+  String ?genre;
+  String ?language;
+  int ?lyricoffset;
+  String ?lyricref;
+  String ?storagepath;
+  String ?title;
+  String ?trial;
+  String ?key;
+  bool ?isFavorite = false;
 
   Music.fromMap(Map<dynamic, dynamic> data) {
     artist = data['artist'];
@@ -61,9 +61,9 @@ class SharedPreferencesKeys {
 }
 
 class Artist implements Comparable<Artist> {
-  String artist;
-  String effectiveartist;
-  String banglaartist;
+  String ?artist;
+  String ?effectiveartist;
+  String ?banglaartist;
 
   Artist(this.artist, this.banglaartist, this.effectiveartist);
 
@@ -76,7 +76,7 @@ class Artist implements Comparable<Artist> {
   @override
   int compareTo(other) {
     if (other is Artist) {
-      return this.effectiveartist.compareTo(other.effectiveartist);
+      return this.effectiveartist!.compareTo(other.effectiveartist);//error in this line exists
     } else
       return -1;
   }
