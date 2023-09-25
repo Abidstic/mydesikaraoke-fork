@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key}) : super(key: key);
+  HomePage({Key? key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -76,15 +76,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = NavigationItem.home.index;
-  String _selectedItem;
+  String? _selectedItem;
+ GlobalKey<FormState> globalkey = GlobalKey<FormState>();
 
-  SearchDelegate _searchDelegate;
+  late SearchDelegate _searchDelegate;
 
-  List<Music> items = List();
-  List<Music> favoriteMusic = List();
-  List<String> favoriteKeyList;
+  List<Music> items = List.empty();
+  List<Music> favoriteMusic = List.empty();
+  List<String> favoriteKeyList = List.empty();
 
-  SharedPreferences prefs;
+  late SharedPreferences prefs;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
 
@@ -169,7 +170,7 @@ class _HomePageState extends State<HomePage> {
                       onTap: () {
                         setState(() {});
                       },
-                      child: Text(LocStr.of(context).helloWorld));
+                      child: Text(LocStr.of(context)!.helloWorld));
                 } else {
                   return InkWell(
                       onTap: () {
@@ -202,35 +203,35 @@ class _HomePageState extends State<HomePage> {
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.home),
-            title: Text('Home'),
+            label: Text('Home').data,
           ),
           BottomNavigationBarItem(
             icon: (_selectedIndex == NavigationItem.artist.index)
                 ? Icon(CupertinoIcons.person_solid)
                 : Icon(CupertinoIcons.person),
-            title: Text('Artist'),
+            label: Text('Artist').data,
           ),
           BottomNavigationBarItem(
             icon: (_selectedIndex == NavigationItem.favorite.index)
                 ? Icon(CupertinoIcons.heart_solid, color: Colors.redAccent)
                 : Icon(CupertinoIcons.heart),
-            title: Text(
+            label: Text(
               'Favorites',
               style: TextStyle(
                   color: (_selectedIndex == NavigationItem.favorite.index)
                       ? Colors.red
                       : null),
-            ),
+            ).data,
           ),
           BottomNavigationBarItem(
             icon: (_selectedIndex == NavigationItem.genre.index)
                 ? Icon(CupertinoIcons.collections_solid)
                 : Icon(CupertinoIcons.collections),
-            title: Text('Genre'),
+            label: Text('Genre').data,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.language),
-            title: Text('Language'),
+            label: Text('Language').data,
           ),
         ],
         // Syncronize with [NavigationItem] enum
@@ -250,7 +251,7 @@ class _HomePageState extends State<HomePage> {
       return;
     } else {
       DatabaseReference musicDataRef =
-          FirebaseDatabase.instance.reference().child("music");
+          FirebaseDatabase.instance.ref().child("music");
       FirebaseDatabase.instance.setPersistenceEnabled(true);
       FirebaseDatabase.instance.setPersistenceCacheSizeBytes(10000000);
       musicDataRef.keepSynced(true);
@@ -258,27 +259,30 @@ class _HomePageState extends State<HomePage> {
           .once()
           .timeout(Duration(seconds: 30),
               onTimeout: () => throw TimeoutException(CONNECTION_TIMEOUT))
-          .then((DataSnapshot data) async {
+          .then((DatabaseEvent event) async {
+        final data = event.snapshot;
         if (prefs == null) {
           prefs = await SharedPreferences.getInstance();
         }
         favoriteKeyList =
-            prefs.getStringList(SharedPreferencesKeys.FAVORITES) ??
-                List<String>();
-        List<Music> list = new List();
+            prefs.getStringList(SharedPreferencesKeys.FAVORITES) ??[];
+        List<Music> list = List.empty();
         if (favoriteKeyList != null) {
           favoriteMusic.clear();
         }
-        data.value.forEach(
-          (key, value) {
-            Music music = Music.fromMap(value);
-            music.key = key;
-            if (favoriteKeyList != null && favoriteKeyList.contains(key)) {
-              music.isFavorite = true;
-            }
-            list.add(music);
-          },
+       data.value.forEach(
+            (key, value) {
+              Music music = Music.fromMap(value);
+              music.key = key;
+              if (favoriteKeyList != null && favoriteKeyList.contains(key)) {
+                music.isFavorite = true;
+              }
+              list.add(music);
+            },
         );
+
+        
+        
         items.clear();
         items.addAll(list);
         items.sort((a, b) => a.effectivetitle.compareTo(b.effectivetitle));
@@ -286,7 +290,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  StatelessWidget buildNavItem([String filter]) {
+  StatelessWidget buildNavItem([String? filter]) {
     if (_selectedIndex == NavigationItem.home.index) {
       var list = items.where((music) => music.language == "Bangla").toList();
       if (filter != null) {
@@ -466,7 +470,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Music> filterAndSort(List<Music> items, String cleanQuery) {
-    var list = List<Music>();
+    var list = List<Music>.empty();
     if (cleanQuery.length < 3) {
       items.forEach((item) {
         if (item.artist.toLowerCase().startsWith(cleanQuery) ||
@@ -522,7 +526,8 @@ class _HomePageState extends State<HomePage> {
       context,
       CupertinoPageRoute(
           builder: (context) => KaraokePage(
-                music: music,
+            key: globalkey ,
+           music: music,
               )),
     );
   }
@@ -547,11 +552,11 @@ class _HomePageState extends State<HomePage> {
           builder: (context) {
             var songNameController = TextEditingController();
             var artistNameController = TextEditingController();
-            var globalKey = GlobalKey();
+            final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
             return AlertDialog(
               title: Text("Song Request"),
               content: Form(
-                key: globalKey,
+                key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -561,7 +566,7 @@ class _HomePageState extends State<HomePage> {
                       controller: songNameController,
                       validator: (val) {
                         print("validating: $val");
-                        if (val.length < 2) {
+                        if (val!.length < 2) {
                           return "Name too short";
                         } else
                           return null;
@@ -575,7 +580,7 @@ class _HomePageState extends State<HomePage> {
                       controller: artistNameController,
                       validator: (val) {
                         print("validating: $val");
-                        if (val.length < 2) {
+                        if (val!.length < 2) {
                           return "Name too short";
                         } else
                           return null;
@@ -587,19 +592,19 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text("Cancel"),
                   onPressed: () {
                     Navigator.pop(context);
                   },
                 ),
-                FlatButton(
+                TextButton(
                     child: Text("Submit"),
                     onPressed: () {
-                      FormState state = globalKey.currentState;
-                      if (state.validate()) {
+                     
+                      if (_formKey.currentState!.validate()) {
                         var songRequestRef = FirebaseDatabase.instance
-                            .reference()
+                            .ref()
                             .child("requests")
                             .push();
                         var songRequestData = Map<String, dynamic>();
@@ -609,7 +614,7 @@ class _HomePageState extends State<HomePage> {
                         songRequestData['user_id'] =
                             FirebaseAuth.instance.currentUser?.uid ?? "";
                         songRequestData['user_name'] =
-                            FirebaseAuth.instance.currentUser.displayName ?? "";
+                            FirebaseAuth.instance.currentUser!.displayName ?? "";
                         songRequestData['user_contact'] =
                             FirebaseAuth.instance.currentUser?.email ?? "";
                         songRequestRef?.set(songRequestData)?.whenComplete(() {
@@ -628,11 +633,11 @@ class _HomePageState extends State<HomePage> {
           context: context,
           builder: (context) {
             var feedbackTextController = TextEditingController();
-            var globalKey = GlobalKey();
+            final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
             return AlertDialog(
               title: Text("Feedback"),
               content: Form(
-                key: globalKey,
+                key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -642,7 +647,7 @@ class _HomePageState extends State<HomePage> {
                       controller: feedbackTextController,
                       validator: (val) {
                         print("validating: $val");
-                        if (val.length < 10) {
+                        if (val!.length < 10) {
                           return "Please elaborate";
                         } else
                           return null;
@@ -656,19 +661,19 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text("Cancel"),
                   onPressed: () {
                     Navigator.pop(context);
                   },
                 ),
-                FlatButton(
+                TextButton(
                     child: Text("Submit"),
                     onPressed: () {
-                      FormState state = globalKey.currentState;
-                      if (state.validate()) {
+
+                      if (_formKey.currentState!.validate()) {
                         var feedbackRef = FirebaseDatabase.instance
-                            .reference()
+                            .ref()
                             .child("feedback")
                             .push();
                         var feedbackData = Map<String, dynamic>();
@@ -676,7 +681,7 @@ class _HomePageState extends State<HomePage> {
                         feedbackData['user_id'] =
                             FirebaseAuth.instance.currentUser?.uid ?? "";
                         feedbackData['user_name'] =
-                            FirebaseAuth.instance.currentUser.displayName ?? "";
+                            FirebaseAuth.instance.currentUser!.displayName ?? "";
                         feedbackData['user_contact'] =
                             FirebaseAuth.instance.currentUser?.email ?? "";
                         feedbackRef?.set(feedbackData)?.whenComplete(() {
@@ -700,7 +705,7 @@ class MusicSearchDelegate extends SearchDelegate {
   final Function buildNavItems;
 
   MusicSearchDelegate(this.items, this._openKaraokePage, this.buildNavItems,
-      {@required this.prefs});
+      {required this.prefs});
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -739,7 +744,7 @@ class MusicSearchDelegate extends SearchDelegate {
 class FadeRoute extends PageRouteBuilder {
   final Widget page;
 
-  FadeRoute({this.page})
+  FadeRoute({required this.page})
       : super(
           pageBuilder: (
             BuildContext context,

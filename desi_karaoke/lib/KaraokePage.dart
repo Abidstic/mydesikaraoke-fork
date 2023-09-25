@@ -22,8 +22,11 @@ import 'package:flu_wake_lock/flu_wake_lock.dart';
 
 class KaraokePage extends StatefulWidget {
   final Music music;
+  
+  final Key? key;
+  
 
-  KaraokePage({required Key key, required this.music}) : super(key: key);
+  KaraokePage({ this.key, required this.music}) : super(key: key);
 
   @override
   _KaraokePageState createState() => _KaraokePageState();
